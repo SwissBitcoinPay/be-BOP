@@ -1,5 +1,6 @@
 import './cleanup-lock';
 import './currency-lock';
+import './eas-declarations';
 import './email-notifications';
 import './order-lock';
 import './payment-processor-lock';

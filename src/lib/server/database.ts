@@ -28,6 +28,7 @@ import type { PaidSubscription } from '$lib/types/PaidSubscription';
 import type { CMSPage } from '$lib/types/CmsPage';
 import type { Challenge } from '$lib/types/Challenge';
 import type { EmailNotification } from '$lib/types/EmailNotification';
+import type { EasDeclaration } from '$lib/types/EasDeclaration';
 import type { Role } from '$lib/types/Role';
 import type { User } from '$lib/types/User';
 import type { Discount } from '$lib/types/Discount';
@@ -125,6 +126,7 @@ const genCollection = () => ({
 	pendingZaps: db.collection<PendingZap>('pendingZaps'),
 
 	accountingLogs: db.collection<AccountingLog>('accountingLogs'),
+	easDeclarations: db.collection<EasDeclaration>('easDeclarations'),
 
 	errors: db.collection<{
 		_id: ObjectId;
@@ -193,6 +195,8 @@ const indexes: Array<[Collection<any>, IndexSpecification, CreateIndexesOptions?
 	[collections.nostrNotifications, { processedAt: 1 }],
 	[collections.emailNotifications, { dest: 1 }],
 	[collections.emailNotifications, { processedAt: 1 }],
+	[collections.easDeclarations, { environment: 1, externalOrderId: 1 }, { unique: true }],
+	[collections.easDeclarations, { environment: 1, status: 1, nextAttemptAt: 1 }],
 	[collections.bootikSubscriptions, { npub: 1 }, { sparse: true }],
 	[collections.paidSubscriptions, { 'user.userId': 1, productId: 1 }],
 	[collections.paidSubscriptions, { 'user.sessionId': 1, productId: 1 }],
