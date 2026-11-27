@@ -14,10 +14,7 @@ export function toCurrency(
 ): number {
 	// Just fix the rounding if the currencies are the same
 	if (fromCurrency === targetCurrency) {
-		return (
-			Math.round(amount * Math.pow(10, FRACTION_DIGITS_PER_CURRENCY[targetCurrency])) /
-			Math.pow(10, FRACTION_DIGITS_PER_CURRENCY[targetCurrency])
-		);
+		return roundToCurrency(amount, targetCurrency);
 	}
 
 	const rates: Record<string, number> = frozenRates
@@ -28,17 +25,26 @@ export function toCurrency(
 
 	// If exchange rates not available yet, return amount as-is (rates fetched from API)
 	if (fromRate === undefined || toRate === undefined) {
-		return (
-			Math.round(amount * Math.pow(10, FRACTION_DIGITS_PER_CURRENCY[targetCurrency])) /
-			Math.pow(10, FRACTION_DIGITS_PER_CURRENCY[targetCurrency])
-		);
+		return roundToCurrency(amount, targetCurrency);
 	}
 
 	const bitcoinAmount = fromCurrency === 'BTC' ? amount : amount / fromRate;
 	const ret = targetCurrency === 'BTC' ? bitcoinAmount : bitcoinAmount * toRate;
 
+	return roundToCurrency(ret, targetCurrency);
+}
+
+/**
+ * Rounds half up to the currency's precision, as written in decimal: 10.455 CHF is 10.46, though
+ * 10.455 * 100 is 1045.4999999999998 in floating point. 15 significant digits drop that error and
+ * keep every digit of any real amount.
+ */
+function roundToCurrency(amount: number, currency: Currency): number {
+	const factor = Math.pow(10, FRACTION_DIGITS_PER_CURRENCY[currency]);
+	const minorUnits = amount * factor;
+	// Beyond 15 digits, a double has no fractional digit left to round
 	return (
-		Math.round(ret * Math.pow(10, FRACTION_DIGITS_PER_CURRENCY[targetCurrency])) /
-		Math.pow(10, FRACTION_DIGITS_PER_CURRENCY[targetCurrency])
+		Math.round(Math.abs(minorUnits) < 1e15 ? Number(minorUnits.toPrecision(15)) : minorUnits) /
+		factor
 	);
 }
