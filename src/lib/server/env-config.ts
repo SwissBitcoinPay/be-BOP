@@ -17,6 +17,11 @@ export const BITCOIN_RPC_PASSWORD =
 	dynPrivateEnv.BITCOIN_RPC_PASSWORD ?? staticPrivateEnv.BITCOIN_RPC_PASSWORD;
 export const BITCOIN_RPC_URL = dynPrivateEnv.BITCOIN_RPC_URL ?? staticPrivateEnv.BITCOIN_RPC_URL;
 export const BITCOIN_RPC_USER = dynPrivateEnv.BITCOIN_RPC_USER ?? staticPrivateEnv.BITCOIN_RPC_USER;
+export const EAS_CLIENT_ID = dynPrivateEnv.EAS_CLIENT_ID ?? staticPrivateEnv.EAS_CLIENT_ID;
+export const EAS_CLIENT_SECRET =
+	dynPrivateEnv.EAS_CLIENT_SECRET ?? staticPrivateEnv.EAS_CLIENT_SECRET;
+export const EAS_ENABLED = dynPrivateEnv.EAS_ENABLED ?? staticPrivateEnv.EAS_ENABLED;
+export const EAS_ENVIRONMENT = dynPrivateEnv.EAS_ENVIRONMENT ?? staticPrivateEnv.EAS_ENVIRONMENT;
 export const FACEBOOK_ID = dynPrivateEnv.FACEBOOK_ID ?? staticPrivateEnv.FACEBOOK_ID;
 export const FACEBOOK_SECRET = dynPrivateEnv.FACEBOOK_SECRET ?? staticPrivateEnv.FACEBOOK_SECRET;
 export const GITHUB_ID = dynPrivateEnv.GITHUB_ID ?? staticPrivateEnv.GITHUB_ID;

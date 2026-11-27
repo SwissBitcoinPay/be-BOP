@@ -10,6 +10,7 @@ import {
 import { ClientSession, ObjectId, type WithId } from 'mongodb';
 import { collections, withTransaction } from './database';
 import { firePaidOrderWebhooks, stripPaidOrderWebhook } from './order-paid-webhook';
+import { enqueueEasDeclarations } from './eas/queue';
 import {
 	type Duration,
 	add,
@@ -297,6 +298,8 @@ export async function onOrderPayment(
 			if (claimed.value) {
 				order = claimed.value;
 				await updateAfterOrderPaid(order, session);
+				// Same transaction: a paid order to the EU is always queued for its IOSS declaration.
+				await enqueueEasDeclarations(order, session);
 			}
 		}
 
