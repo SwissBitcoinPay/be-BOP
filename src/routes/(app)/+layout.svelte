@@ -20,7 +20,12 @@
 	import IconMenu from '~icons/ant-design/menu-outlined';
 	import { slide } from 'svelte/transition';
 	import { exchangeRate } from '$lib/stores/exchangeRate';
-	import { currencies } from '$lib/stores/currencies';
+	import { currencies, visitorCurrency, visitorRates } from '$lib/stores/currencies';
+	import {
+		NO_DISPLAY_CURRENCY,
+		showsVisitorCurrency,
+		type DisplayCurrency
+	} from '$lib/utils/visitorCurrency';
 	import { cookieConsentVisible } from '$lib/stores/cookieConsentVisible';
 	import { sellerIdentity } from '$lib/stores/sellerIdentity';
 	import { useI18n } from '$lib/i18n';
@@ -56,10 +61,16 @@
 
 	$exchangeRate = data.exchangeRate;
 	$currencies = data.currencies;
+	$: displayCurrency = showsVisitorCurrency($page.route.id)
+		? { currency: data.visitorCurrency, rates: null }
+		: ($page.data.displayCurrency as DisplayCurrency | undefined) ?? NO_DISPLAY_CURRENCY;
 	$sellerIdentity = data.sellerIdentity ?? undefined;
 
 	$: $exchangeRate = data.exchangeRate;
 	$: $currencies = data.currencies;
+	// Storefront: the visitor's currency at live rates; orders: what their page load decided
+	$: $visitorCurrency = displayCurrency.currency;
+	$: $visitorRates = displayCurrency.rates;
 	$: $sellerIdentity = data.sellerIdentity ?? undefined;
 
 	$: items = data.cart.items;

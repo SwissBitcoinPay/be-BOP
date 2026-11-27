@@ -16,6 +16,7 @@ import {
 import { availableContactModes } from '$lib/server/contact-modes';
 import { contactModesOrEmail } from '$lib/types/ContactMode';
 import { runtimeConfig } from '$lib/server/runtime-config';
+import { visitorCurrencyForCountry } from '$lib/utils/visitorCurrency';
 import { checkCartItems, getCartFromDb } from '$lib/server/cart.js';
 import { applyResolvedStock } from '$lib/server/product.js';
 import { userIdentifier, userQuery } from '$lib/server/user.js';
@@ -669,6 +670,10 @@ export const actions = {
 						shippingAddress: shippingInfo?.shipping,
 						billingAddress: billingInfo?.billing || shippingInfo?.shipping,
 						userVatCountry: vatCountry,
+						// The customer sees this order and its invoice in their currency (display only)
+						visitorCurrency: locals.user?.hasPosOptions
+							? null
+							: visitorCurrencyForCountry(locals.countryCode, runtimeConfig.exchangeRate),
 						...(locals.user?.hasPosOptions && isFreeVat && { reasonFreeVat }),
 						...(locals.user?.hasPosOptions &&
 							discountAmount &&

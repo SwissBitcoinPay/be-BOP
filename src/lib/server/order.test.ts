@@ -531,4 +531,48 @@ describe('order', () => {
 			);
 		});
 	});
+
+	describe('visitor currency', () => {
+		const createTestOrder = (visitorCurrency?: 'EUR' | 'CHF' | null) =>
+			createOrder([{ product: TEST_DIGITAL_PRODUCT, quantity: 1 }], 'point-of-sale', {
+				locale: 'en',
+				user: { sessionId: 'test-session-id' },
+				shippingAddress: null,
+				userVatCountry: 'FR',
+				visitorCurrency
+			});
+
+		it("stores the customer's currency and today's rates, leaving the amounts in the shop's", async () => {
+			const mainCurrency = runtimeConfig.mainCurrency;
+			runtimeConfig.mainCurrency = 'CHF';
+			Object.assign(runtimeConfig.exchangeRate, { CHF: 80_000, EUR: 85_000 });
+			try {
+				const order = await collections.orders.findOne({ _id: await createTestOrder('EUR') });
+
+				expect(order?.visitorCurrency).toEqual({
+					currency: 'EUR',
+					exchangeRate: expect.objectContaining({ EUR: 85_000, CHF: 80_000 })
+				});
+				expect(order?.currencySnapshot.main.totalPrice.currency).toBe('CHF');
+				expect(order?.payments[0].currencySnapshot.main.price.currency).toBe('CHF');
+			} finally {
+				runtimeConfig.mainCurrency = mainCurrency;
+			}
+		});
+
+		it('stores nothing without a visitor currency, or when it is the main one', async () => {
+			const mainCurrency = runtimeConfig.mainCurrency;
+			runtimeConfig.mainCurrency = 'CHF';
+			try {
+				for (const visitorCurrency of [undefined, null, 'CHF'] as const) {
+					const order = await collections.orders.findOne({
+						_id: await createTestOrder(visitorCurrency)
+					});
+					expect(order?.visitorCurrency).toBeUndefined();
+				}
+			} finally {
+				runtimeConfig.mainCurrency = mainCurrency;
+			}
+		});
+	});
 });

@@ -22,6 +22,7 @@ import type { UserIdentifier } from '$lib/types/UserIdentifier';
 import type { Cart } from '$lib/types/Cart';
 import { computeDeliveryFees, computePriceInfo } from '$lib/cart';
 import { UNDERLYING_CURRENCY } from '$lib/types/Currency';
+import { visitorCurrencyForCountry } from '$lib/utils/visitorCurrency';
 import { isAlpha2CountryCode } from '$lib/types/Country';
 import {
 	collectUserAddresses,
@@ -342,6 +343,7 @@ export async function load(params) {
 			secondary: runtimeConfig.secondaryCurrency,
 			priceReference: runtimeConfig.priceReferenceCurrency
 		},
+		visitorCurrency: visitorCurrencyForCountry(locals.countryCode, runtimeConfig.exchangeRate),
 		brandName:
 			runtimeConfig[`translations.${locals.language}.config`]?.brandName || runtimeConfig.brandName,
 		locales: runtimeConfig.languages,

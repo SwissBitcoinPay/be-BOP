@@ -370,15 +370,26 @@
 		{#if data.payment.method === 'custom' && data.payment.customPaymentMethod?.label}
 			{t('order.paidWith.customNamed', { label: data.payment.customPaymentMethod.label })}
 		{:else}
+			{@const shopPrice = data.payment.currencySnapshot.accounting
+				? data.payment.currencySnapshot.accounting.price
+				: data.payment.currencySnapshot.main.price}
+			{@const customerCurrency = data.displayCurrency.currency}
+			{@const rates = data.displayCurrency.rates}
+			{@const invoicePrice =
+				customerCurrency &&
+				shopPrice.currency !== 'SAT' &&
+				rates?.[customerCurrency] &&
+				rates[shopPrice.currency]
+					? {
+							currency: customerCurrency,
+							// Unrounded, as it gives the rate: same conversion as the amounts above
+							amount: (shopPrice.amount / rates[shopPrice.currency]) * rates[customerCurrency]
+					  }
+					: shopPrice}
 			{t('order.paidWith.' + data.payment.method, {
 				paymentCurrency: data.payment.price.currency,
-				mainCurrency: data.payment.currencySnapshot.accounting
-					? data.payment.currencySnapshot.accounting?.price.currency
-					: data.payment.currencySnapshot.main.price.currency,
-				exchangeRate:
-					(data.payment.currencySnapshot.accounting
-						? data.payment.currencySnapshot.accounting?.price.amount
-						: data.payment.currencySnapshot.main.price.amount) / data.payment.price.amount
+				mainCurrency: invoicePrice.currency,
+				exchangeRate: invoicePrice.amount / data.payment.price.amount
 			})}
 		{/if}
 	</div>

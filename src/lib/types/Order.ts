@@ -1,5 +1,6 @@
 import type { Product } from './Product';
 import type { Currency } from './Currency';
+import type { VisitorCurrencySnapshot } from '$lib/utils/visitorCurrency';
 import type { CountryAlpha2 } from './Country';
 import type { Timestamps } from './Timestamps';
 import type { UserIdentifier } from './UserIdentifier';
@@ -326,6 +327,13 @@ export interface Order extends Timestamps {
 	deliveryFeesFree?: {
 		reason: string;
 	};
+
+	/**
+	 * The customer's own currency (from their country) and the exchange rates when the order was
+	 * placed, so the order page and the invoice show them the same amounts at every visit.
+	 * Display only: amounts, payments and accounting stay in the shop's currencies.
+	 */
+	visitorCurrency?: VisitorCurrencySnapshot;
 
 	currencySnapshot: {
 		main: {

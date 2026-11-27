@@ -64,6 +64,7 @@ import { handleOrderTabAfterPayment } from './orderTab';
 import { userQuery } from './user';
 import { SMTP_USER } from '$lib/server/env-config';
 import { toCurrency } from '$lib/utils/toCurrency';
+import { snapshotVisitorCurrency } from '$lib/utils/visitorCurrency';
 import { escapeHtml } from '$lib/utils/escapeHtml';
 import { convertAmountToCurrencyForStorage } from '$lib/utils/toStorageCurrency';
 import { CUSTOMER_ROLE_ID, POS_ROLE_ID } from '$lib/types/User';
@@ -689,6 +690,11 @@ export async function createOrder(
 		note?: string;
 		receiptNote?: string;
 		customCheckoutFields?: CollectedCheckoutField[];
+		/**
+		 * Currency of the customer's country, to show them the order and invoice in it.
+		 * Only from the storefront; null or the main currency means no conversion.
+		 */
+		visitorCurrency?: Currency | null;
 		engagements?: {
 			acceptedTermsOfUse?: boolean;
 			acceptedIPCollect?: boolean;
@@ -1441,6 +1447,19 @@ export async function createOrder(
 			);
 		}
 
+		const visitorCurrencySnapshot = snapshotVisitorCurrency(
+			params.visitorCurrency,
+			{
+				main: runtimeConfig.mainCurrency,
+				others: [
+					runtimeConfig.secondaryCurrency,
+					runtimeConfig.priceReferenceCurrency,
+					runtimeConfig.accountingCurrency
+				]
+			},
+			runtimeConfig.exchangeRate
+		);
+
 		const order: Order = {
 			_id: orderId,
 			locale: params.locale,
@@ -1577,6 +1596,7 @@ export async function createOrder(
 				}),
 			...(bestAutoDiscount && { appliedAutoDiscountId: bestAutoDiscount.discount._id }),
 			...(params.clientIp && { clientIp: params.clientIp }),
+			...(visitorCurrencySnapshot && { visitorCurrency: visitorCurrencySnapshot }),
 			currencySnapshot: {
 				main: {
 					totalPrice: {

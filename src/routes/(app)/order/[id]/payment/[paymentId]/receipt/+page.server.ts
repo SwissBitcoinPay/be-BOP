@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { runtimeConfig } from '$lib/server/runtime-config.js';
 import { fetchOrderForUser } from '../../../fetchOrderForUser.js';
+import { orderDisplayCurrency } from '$lib/utils/visitorCurrency';
 
 export async function load({ params }) {
 	const order = await fetchOrderForUser(params.id);
@@ -26,6 +27,8 @@ export async function load({ params }) {
 	}
 	return {
 		order,
+		// In the customer's currency only at the rates stored on the order: an invoice never changes
+		displayCurrency: orderDisplayCurrency(order),
 		payment,
 		layoutReset: true,
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion

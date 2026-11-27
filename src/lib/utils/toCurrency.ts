@@ -2,10 +2,15 @@ import { exchangeRate } from '$lib/stores/exchangeRate';
 import { FRACTION_DIGITS_PER_CURRENCY, type Currency } from '$lib/types/Currency';
 import { get } from 'svelte/store';
 
+/**
+ * @param frozenRates Rates to use instead of the live ones where they have them (units per
+ *   bitcoin), e.g. the ones stored on an order
+ */
 export function toCurrency(
 	targetCurrency: Currency,
 	amount: number,
-	fromCurrency: Currency
+	fromCurrency: Currency,
+	frozenRates?: Record<string, number> | null
 ): number {
 	// Just fix the rounding if the currencies are the same
 	if (fromCurrency === targetCurrency) {
@@ -15,7 +20,9 @@ export function toCurrency(
 		);
 	}
 
-	const rates: Record<string, number> = get(exchangeRate);
+	const rates: Record<string, number> = frozenRates
+		? { ...get(exchangeRate), ...frozenRates }
+		: get(exchangeRate);
 	const fromRate = fromCurrency === 'BTC' ? 1 : rates[fromCurrency];
 	const toRate = targetCurrency === 'BTC' ? 1 : rates[targetCurrency];
 

@@ -13,6 +13,11 @@ import {
 import { userIdentifier, userQuery } from '$lib/server/user';
 import { CUSTOMER_ROLE_ID } from '$lib/types/User.js';
 import { runtimeConfig } from '$lib/server/runtime-config.js';
+import {
+	NO_DISPLAY_CURRENCY,
+	orderDisplayCurrency,
+	visitorCurrencyForCountry
+} from '$lib/utils/visitorCurrency';
 import { paymentMethods, restrictToProducts } from '$lib/server/payment-methods.js';
 import { PAYMENT_RETURN_PARAM } from '$lib/types/Order.js';
 import type { OrderLabel } from '$lib/types/OrderLabel.js';
@@ -109,8 +114,17 @@ export async function load({ params, depends, locals, url }) {
 	const returnTo = url.searchParams.get('returnTo');
 	const posMode = locals.user?.hasPosOptions && returnTo?.startsWith('/pos/touch');
 
+	const isStaff = !!locals.user?.roleId && locals.user.roleId !== CUSTOMER_ROLE_ID;
+
 	return {
 		order,
+		// The customer sees their order in their currency; staff keep the shop's (payment forms are in it)
+		displayCurrency: isStaff
+			? NO_DISPLAY_CURRENCY
+			: orderDisplayCurrency(
+					order,
+					visitorCurrencyForCountry(locals.countryCode, runtimeConfig.exchangeRate)
+			  ),
 		splitMode: order.splitMode,
 		paymentMethods: methods,
 		tapToPay,

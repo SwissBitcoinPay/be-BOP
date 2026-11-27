@@ -170,6 +170,7 @@ export async function fetchOrderForUser(orderId: string, params?: { userRoleId?:
 		vatFree: order.vatFree,
 		discount: order.discount,
 		currencySnapshot: order.currencySnapshot,
+		visitorCurrency: order.visitorCurrency,
 		status: order.status,
 		notes: isStaff
 			? order.notes?.map((note) => ({

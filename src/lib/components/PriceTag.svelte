@@ -7,7 +7,8 @@
 	import { toCurrency } from '$lib/utils/toCurrency';
 	import IconBitcoin from './icons/IconBitcoin.svelte';
 	import IconSatoshi from './icons/IconSatoshi.svelte';
-	import { currencies } from '$lib/stores/currencies';
+	import { currencies, visitorCurrency, visitorRates } from '$lib/stores/currencies';
+	import { localizedCurrency } from '$lib/utils/visitorCurrency';
 
 	export let amount: number;
 	export let currency: Currency;
@@ -31,10 +32,23 @@
 	const mainCurrency = $currencies.main;
 	const secondaryCurrency = $currencies.secondary;
 
-	$: actualCurrency = (
+	$: shopCurrency = (
 		main ? mainCurrency : secondary ? secondaryCurrency : convertedTo ?? currency
 	) as Currency | null;
-	$: actualAmount = actualCurrency === null ? 0 : toCurrency(actualCurrency, amount, currency);
+	// Fiat amounts are shown in the visitor's currency on the storefront (see visitorCurrency store)
+	$: actualCurrency =
+		shopCurrency &&
+		localizedCurrency(shopCurrency, {
+			visitorCurrency: $visitorCurrency,
+			isSecondary: secondary,
+			mainCurrency,
+			secondaryCurrency
+		});
+	$: converted = !!shopCurrency && actualCurrency !== shopCurrency;
+	$: actualAmount =
+		actualCurrency === null
+			? 0
+			: toCurrency(actualCurrency, amount, currency, converted ? $visitorRates : null);
 
 	// Auto-conversion thresholds: small BTC amounts show as SAT, large SAT amounts show as BTC
 	$: [displayedAmount, displayedCurrency] = (() => {
@@ -73,10 +87,20 @@
 	$: displayed = isSmallFiatAmount
 		? `< ${formattedAmount}`
 		: `${formattedAmount}${displayedCurrency === 'SAT' && !short ? ' SAT' : ''}`;
+
+	// When converted for the visitor, the hover text gives the shop's own price
+	$: title =
+		converted && shopCurrency
+			? `${displayed} ≈ ${toCurrency(shopCurrency, amount, currency).toLocaleString('en', {
+					style: 'currency',
+					currency: shopCurrency,
+					maximumFractionDigits: FRACTION_DIGITS_PER_CURRENCY[shopCurrency]
+			  })}`
+			: displayed;
 </script>
 
 {#if actualCurrency}
-	<div class="{className} {inline ? 'inline-flex' : 'flex'} {gap} items-center" title={displayed}>
+	<div class="{className} {inline ? 'inline-flex' : 'flex'} {gap} items-center" {title}>
 		{#if displayedCurrency === 'SAT'}
 			<IconSatoshi class="min-w-[1em]" />
 		{:else if displayedCurrency === 'BTC'}
